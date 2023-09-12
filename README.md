@@ -43,8 +43,15 @@ Geef het een naam, support email en contact information. Klik dan op `SAVE AND C
 Nu moet je een scope gaan toevoegen. Klik op `ADD OR REMOVE SCOPES` en zoek vervolgens naar `calendar.events`. Klik op het eerste resultaat en klik op `UPDATE`.  
 Klik vervolgens op `SAVE AND CONTINUE` en je scope is ingesteld.  
 Selecteer voor application type `Desktop app` en geef het een naam. Klik dan op `CREATE`.  
-Download vervolgens je credentials en bewaar deze. Klik daarna op `DONE`.  
+Download vervolgens je credentials en bewaar deze als `credentials.json`. Klik daarna op `DONE`.  
 Nu ben je klaar met de Google Agenda API!
 
-## 4. Start het programma
+## 4. Geckodriver en pip installeren
 
+## 5. Start het programma
+Nu is het tijd om het programma op te starten.  
+Bewerk alleereerst `HomiAgenda.py`. Vul je juiste informatie in voor de login credentials.  
+Voordat we de file op de server gaan zetten voeren we deze eerst uit op je computer. Je zal gevraagd worden om in te loggen in Google. Als dit gelukt is zal er een bestand aangemaakt worden met de naam <email>.json. Nu kan je het programma sluiten.
+Nu is het tijd om de bestanden over te zetten naar de server. Hiervoor kan je Filezilla gebruiken of de commandline.  
+Zet `HomiAgenda.py, <email>.json en credentials.json` in een folder op je server bij elkaar. In Filezilla is dit drag and drop, maar met de commandline moet je alle bestanden één voor één toevoegen met `nano`.
+Nu ben je klaar om het programma te starten op je server. `python3 HomiAgenda.py`

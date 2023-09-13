@@ -41,7 +41,7 @@ MONTHS = {'JAN.': 1,
           'DEC.': 12}
 
 def startGoogleAPI():
-    SCOPES = ['https://www.googleapis.com/auth/calendar.events']
+    SCOPES = ['https://www.googleapis.com/auth/calendar.app.created']
 
     creds = None
 

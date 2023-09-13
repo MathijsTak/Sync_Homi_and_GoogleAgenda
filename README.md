@@ -47,6 +47,22 @@ Download vervolgens je credentials en bewaar deze als `credentials.json`. Klik d
 Nu ben je klaar met de Google Agenda API!
 
 ## 4. Geckodriver en pip installeren
+Het installeren van Geckodriver en pip op Ubuntu kan al voor je gedaan zijn, maar om er zeker van te zijn kan je de volgende commands runnen.  
+```
+sudo apt install firefox 
+sudo apt install python3-pip
+geckodriver --version
+pip --version
+```
+Voor Windows is dit ook mogelijk. Je moet dan de geckodriver voor Windows hier downloaden: https://github.com/mozilla/geckodriver  
+Plaats deze executable vervolgens op een locatie die in PATH staat. Om een locatie toe te voegen aan PATH moet je zoeken in windows naar `omgevingsvariabelen`. Hier staat kan je het tabje Path bewerken en een nieuwe locatie toevoegen.  
+Als dit gelukt is dan is het tijd om de laatste libraries te installeren.  
+```
+pip install selenium
+pip install mysql-connector-python
+pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
+```
+Nu is alles klaar om het programma te starten.
 
 ## 5. Start het programma
 Nu is het tijd om het programma op te starten.  

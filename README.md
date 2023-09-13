@@ -40,10 +40,11 @@ Klik vervolgens op `+ ENABLE APIS AND SERVICES` en zoek naar `Google Calendar AP
 Als dit gelukt is kom je op een pagina waar rechtboven staat `CREATE CREDENTIALS`. Klik hierop.  
 Selecteer in het volgende menu `User Data` en klik op `NEXT`.  
 Geef het een naam, support email en contact information. Klik dan op `SAVE AND CONTINUE`.  
-Nu moet je een scope gaan toevoegen. Klik op `ADD OR REMOVE SCOPES` en zoek vervolgens naar `calendar.events`. Klik op het eerste resultaat en klik op `UPDATE`.  
+Nu moet je een scope gaan toevoegen. Klik op `ADD OR REMOVE SCOPES` en zoek vervolgens naar `calendar.app.created`. Klik op het eerste resultaat en klik op `UPDATE`.  
 Klik vervolgens op `SAVE AND CONTINUE` en je scope is ingesteld.  
 Selecteer voor application type `Desktop app` en geef het een naam. Klik dan op `CREATE`.  
 Download vervolgens je credentials en bewaar deze als `credentials.json`. Klik daarna op `DONE`.  
+Ga vervolgens naar `OAuth consent screen` en klik op `PUBLISH`. Volg de stappen om je app actief te maken.  
 Nu ben je klaar met de Google Agenda API!
 
 ## 4. Geckodriver en pip installeren

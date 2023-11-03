@@ -19,12 +19,12 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 #Login credentials
-username = '<HOMI-EMAIL>'
-password = '<HOMI-PASSWORD>'
-db_hostname = '<DB-HOSTNAME>'
-db_username = '<DB-USERNAME>'
-db_password = '<DB-PASSWORD>'
-db_name = 'homi'
+username = 'Homi Username Here'
+password = 'Homi Password Here'
+db_hostname = 'Server Hostname Here'
+db_username = 'Server Username Here'
+db_password = 'Server Password Here'
+db_name = 'Database Name Here'
 
 TIMEOUT = 10
 MONTHS = {'JAN.': 1,
@@ -198,11 +198,12 @@ def getNewData(wait: WebDriverWait, driver):
     return data, first_date, last_date
 
 def getOldData(first_date: datetime.datetime, last_date: datetime.datetime, connection):
+    current_date = datetime.datetime.now()
     data = []
     if first_date < last_date:
-        query = f"""SELECT * FROM {db_name}.`{username}` WHERE AssignmentStart>='{first_date}' and AssignmentEnd<='{last_date}';"""
+        query = f"""SELECT * FROM {db_name}.`{username}` WHERE AssignmentStart>='{current_date}' and AssignmentEnd<='{last_date}';"""
     else:
-        query = f"""SELECT * FROM {db_name}.`{username}` WHERE AssignmentStart<='{first_date}' and AssignmentEnd>='{last_date}';"""
+        query = f"""SELECT * FROM {db_name}.`{username}` WHERE AssignmentStart<='{current_date}' and AssignmentEnd>='{last_date}';"""
     assignments = read_query(connection, query)
     for assignment in assignments:
         data.append(list(assignment))
@@ -210,7 +211,10 @@ def getOldData(first_date: datetime.datetime, last_date: datetime.datetime, conn
     return data
 
 def removeassignment(event_id: str, connection, service):
-    service.events().delete(calendarId=calendar_id, eventId=event_id).execute()
+    try:
+        service.events().delete(calendarId=calendar_id, eventId=event_id).execute()
+    except:
+        pass
     
     query = f"""DELETE FROM {db_name}.`{username}` WHERE EventId='{event_id}';"""
     execute_query(connection, query)
@@ -239,8 +243,13 @@ def addassignment(assignment_title, assignment_subtitle, assignment_start, assig
 def compareData(new_data: list, old_data: list):
     assignments_to_add = []
     assignments_to_remove = []
+    updated_old_data = []
     for assignment in old_data:
         if [assignment[1], assignment[2], assignment[3], assignment[4]] not in new_data:
+            assignments_to_remove.append(assignment)
+        elif [assignment[1], assignment[2], assignment[3], assignment[4]] not in updated_old_data:
+            updated_old_data.append([assignment[1], assignment[2], assignment[3], assignment[4]])
+        else:
             assignments_to_remove.append(assignment)
     
     old_data = [[x[1], x[2], x[3], x[4]] for x in old_data]

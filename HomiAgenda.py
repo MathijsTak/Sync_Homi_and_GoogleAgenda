@@ -19,12 +19,12 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 #Login credentials
-username = 'Homi Username Here'
-password = 'Homi Password Here'
-db_hostname = 'Server Hostname Here'
-db_username = 'Server Username Here'
-db_password = 'Server Password Here'
-db_name = 'Database Name Here'
+username = 'Lyceo Username'
+password = 'Lyceo Password'
+db_hostname = 'server ip/hostname'
+db_username = 'server username'
+db_password = 'server password'
+db_name = 'homi' # Moet hezelfde zijn als de database opgegeven in "Make DB.py"
 
 TIMEOUT = 10
 MONTHS = {'JAN.': 1,
@@ -178,12 +178,14 @@ def getNewData(wait: WebDriverWait, driver):
                 assignment_month = MONTHS[assignment_date_raw.split()[2]]
 
                 if assignment_month - current_month == -11:
-                    current_year += assignment_month - current_month + 10
+                    current_year += 1
                 elif assignment_month - current_month == 11:
-                    current_year += assignment_month - current_month - 10
+                    current_year += -1
+                    
+                current_month = assignment_month
 
-                assignment_start = datetime.datetime.strptime(f"{current_date.year}-{assignment_month}-{assignment_day}-{assignment_start_time.split(':')[0]}-{assignment_start_time.split(':')[1]}", '%Y-%m-%d-%H-%M')
-                assignment_end = datetime.datetime.strptime(f"{current_date.year}-{assignment_month}-{assignment_day}-{assignment_end_time.split(':')[0]}-{assignment_end_time.split(':')[1]}", '%Y-%m-%d-%H-%M')
+                assignment_start = datetime.datetime.strptime(f"{current_year}-{assignment_month}-{assignment_day}-{assignment_start_time.split(':')[0]}-{assignment_start_time.split(':')[1]}", '%Y-%m-%d-%H-%M')
+                assignment_end = datetime.datetime.strptime(f"{current_year}-{assignment_month}-{assignment_day}-{assignment_end_time.split(':')[0]}-{assignment_end_time.split(':')[1]}", '%Y-%m-%d-%H-%M')
                 
                 if [assignment_title, assignment_subtitle, assignment_start, assignment_end] not in data:
                     data.append([assignment_title, assignment_subtitle, assignment_start, assignment_end])

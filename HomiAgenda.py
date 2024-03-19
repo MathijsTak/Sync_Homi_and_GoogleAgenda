@@ -1,4 +1,5 @@
 import datetime
+from pickle import FALSE
 import random
 import time
 import mysql.connector
@@ -19,12 +20,13 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 #Login credentials
-username = 'Lyceo Username'
-password = 'Lyceo Password'
-db_hostname = 'server ip/hostname'
-db_username = 'server username'
-db_password = 'server password'
-db_name = 'homi' # Moet hezelfde zijn als de database opgegeven in "Make DB.py"
+username = 'HOMI USERNAME'
+password = 'HOMI PASSWORD'
+db_hostname = 'DB HOSTNAME'
+db_username = 'DB USERNAME'
+db_password = 'DB PASSWORD'
+db_name = 'homi' #Default in the documentation is homi
+old_data_sync_amount = 50 # The amount of old data that needs to be synced with your calendar
 
 TIMEOUT = 10
 MONTHS = {'JAN.': 1,
@@ -54,7 +56,7 @@ def startGoogleAPI():
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
+                '/home/mathijs/homi/credentials.json', SCOPES)
             creds = flow.run_local_server(port=9090)
         # Save the credentials for the next run
         with open(username + '.json', 'w') as token:
@@ -148,10 +150,12 @@ def signIn(wait: WebDriverWait):
         time.sleep(1)
     except:
         pass
-    wait.until(ec.visibility_of_element_located((By.XPATH, '//*[@id="tab-button-opdrachten"]'))).click()
-    wait.until(ec.visibility_of_element_located((By.XPATH, '//*[@id="tab-button-gepland"]'))).click()
 
-def getNewData(wait: WebDriverWait, driver):
+def getNewData(wait: WebDriverWait, driver, new, max_data = 9999):
+    if new:
+        driver.execute_script("arguments[0].scrollIntoView();", wait.until(ec.visibility_of_element_located((By.XPATH, '/html/body/app-root/ion-app/ion-router-outlet/app-menu-layout/ion-tabs/div/ion-router-outlet/app-assignments-page/ion-tabs/div/ion-router-outlet/app-planned-assignments/ion-content/app-assignment-card[1]'))))
+    else:
+        driver.execute_script("arguments[0].scrollIntoView();", wait.until(ec.visibility_of_element_located((By.XPATH, '/html/body/app-root/ion-app/ion-router-outlet/app-menu-layout/ion-tabs/div/ion-router-outlet/app-assignments-page/ion-tabs/div/ion-router-outlet/app-finished-assignments/ion-content/app-assignment-card[1]'))))
     num_assignments = None
     data = []
     first_date = None
@@ -160,7 +164,7 @@ def getNewData(wait: WebDriverWait, driver):
     current_month = current_date.month
     current_year = current_date.year
 
-    while len(data) != num_assignments:
+    while len(data) != num_assignments and len(data) < max_data:
         num_assignments = len(data)
 
         assignments = wait.until(ec.visibility_of_any_elements_located((By.CSS_SELECTOR, 'app-assignment-card')))
@@ -174,26 +178,41 @@ def getNewData(wait: WebDriverWait, driver):
                 assignment_date_raw = assignment_info[2].text.split('\n')[0]
                 assignment_start_time = assignment_info[2].text.split('\n')[1].split(' - ')[0]
                 assignment_end_time = assignment_info[2].text.split('\n')[1].split(' - ')[1]
-                assignment_day = assignment_date_raw.split()[1]
-                assignment_month = MONTHS[assignment_date_raw.split()[2]]
-
-                if assignment_month - current_month == -11:
-                    current_year += 1
-                elif assignment_month - current_month == 11:
-                    current_year += -1
-                    
-                current_month = assignment_month
-
-                assignment_start = datetime.datetime.strptime(f"{current_year}-{assignment_month}-{assignment_day}-{assignment_start_time.split(':')[0]}-{assignment_start_time.split(':')[1]}", '%Y-%m-%d-%H-%M')
-                assignment_end = datetime.datetime.strptime(f"{current_year}-{assignment_month}-{assignment_day}-{assignment_end_time.split(':')[0]}-{assignment_end_time.split(':')[1]}", '%Y-%m-%d-%H-%M')
                 
-                if [assignment_title, assignment_subtitle, assignment_start, assignment_end] not in data:
-                    data.append([assignment_title, assignment_subtitle, assignment_start, assignment_end])
-                    print([assignment_title, assignment_subtitle, assignment_start, assignment_end])
+                assignment_days = []
+                assignment_months = []
+                
+                i = 0
 
-                if first_date == None:
-                    first_date = assignment_start
-                last_date = assignment_end
+                while len(assignment_date_raw.split()) > i:
+                    assignment_days.append(assignment_date_raw.split()[i + 1])
+                    assignment_months.append(MONTHS[assignment_date_raw.split()[i + 2]])
+                    i += 4
+                    
+                i = 0
+                while i < len(assignment_days):
+                    assignment_month = assignment_months[i]
+                    assignment_day = assignment_days[i]
+
+                    if assignment_month - current_month == -11:
+                        current_year += 1
+                    elif assignment_month - current_month == 11:
+                        current_year += -1
+                    
+                    current_month = assignment_month
+
+                    assignment_start = datetime.datetime.strptime(f"{current_year}-{assignment_month}-{assignment_day}-{assignment_start_time.split(':')[0]}-{assignment_start_time.split(':')[1]}", '%Y-%m-%d-%H-%M')
+                    assignment_end = datetime.datetime.strptime(f"{current_year}-{assignment_month}-{assignment_day}-{assignment_end_time.split(':')[0]}-{assignment_end_time.split(':')[1]}", '%Y-%m-%d-%H-%M')
+                
+                    if [assignment_title, assignment_subtitle, assignment_start, assignment_end] not in data:
+                        data.append([assignment_title, assignment_subtitle, assignment_start, assignment_end])
+                        print([assignment_title, assignment_subtitle, assignment_start, assignment_end])
+
+                    if first_date == None:
+                        first_date = assignment_start
+                    last_date = assignment_end
+                    
+                    i += 1
 
             driver.execute_script("arguments[0].scrollIntoView();", assignment)
             
@@ -203,9 +222,9 @@ def getOldData(first_date: datetime.datetime, last_date: datetime.datetime, conn
     current_date = datetime.datetime.now()
     data = []
     if first_date < last_date:
-        query = f"""SELECT * FROM {db_name}.`{username}` WHERE AssignmentStart>='{current_date}' and AssignmentEnd<='{last_date}';"""
+        query = f"""SELECT * FROM {db_name}.`{username}` WHERE AssignmentStart>='{first_date}' and AssignmentEnd<='{last_date}';"""
     else:
-        query = f"""SELECT * FROM {db_name}.`{username}` WHERE AssignmentStart<='{current_date}' and AssignmentEnd>='{last_date}';"""
+        query = f"""SELECT * FROM {db_name}.`{username}` WHERE AssignmentStart<='{first_date}' and AssignmentEnd>='{last_date}';"""
     assignments = read_query(connection, query)
     for assignment in assignments:
         data.append(list(assignment))
@@ -261,8 +280,8 @@ def compareData(new_data: list, old_data: list):
    
     return assignments_to_add, assignments_to_remove
 
-def data(wait, driver, connection, calendar_id, service):
-    new_data, first_date, last_date = getNewData(wait, driver)
+def data(wait, driver, connection, calendar_id, service, new, max_data = 9999):
+    new_data, first_date, last_date = getNewData(wait, driver, new, max_data)
     old_data = getOldData(first_date, last_date, connection)
     assignments_to_add, assignments_to_remove = compareData(new_data, old_data)
 
@@ -278,11 +297,14 @@ while True:
         calendar_id = makeCalendar(service)
         wait, driver = startBrowser()
         signIn(wait)
+        
+        driver.get('https://werkenbijapp.lyceo.nl/opdrachten/gepland')
+        time.sleep(2)
+        data(wait, driver, connection, calendar_id, service, True)
 
-        data(wait, driver, connection, calendar_id, service)
-
-        wait.until(ec.visibility_of_element_located((By.XPATH, '//*[@id="tab-button-afgerond"]'))).click()
-        data(wait, driver, connection, calendar_id, service)
+        driver.get('https://werkenbijapp.lyceo.nl/opdrachten/afgerond')
+        time.sleep(2)
+        data(wait, driver, connection, calendar_id, service, False, old_data_sync_amount)
 
         driver.close()
     except Exception as e:

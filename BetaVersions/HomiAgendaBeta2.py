@@ -135,12 +135,21 @@ def startBrowser():
     return wait, driver
 
 def signIn(wait: WebDriverWait):
+    global auth_code
     success = False
+    time.sleep(1)
+    if driver.current_url != "https://werkenbijapp.lyceo.nl/login": return True
     while not success:
         wait.until(ec.visibility_of_element_located((By.XPATH, '//*[@id="btn-login"]'))).click()
         wait.until(ec.visibility_of_element_located((By.XPATH, '//*[@id="username"]'))).send_keys(username)
         wait.until(ec.visibility_of_element_located((By.XPATH, '//*[@id="password"]'))).send_keys(password)
         wait.until(ec.visibility_of_element_located((By.XPATH, '/html/body/div/div/div/form/div[3]/button'))).click()
+        if driver.current_url == "https://sso.lyceo.nl/2fa":
+            if auth_code == '':
+                message = wait.until(ec.visibility_of_element_located((By.XPATH, '/html/body/div/div/div/label'))).text
+                auth_code = input(message + ": ")
+            wait.until(ec.visibility_of_element_located((By.XPATH, '//*[@id="_auth_code"]'))).send_keys(auth_code)
+            wait.until(ec.visibility_of_element_located((By.XPATH, '/html/body/div/div/div/form/div[2]/button'))).click()
         try:
             wait.until(ec.visibility_of_element_located((By.XPATH, '//*[@id="btn-login"]')))
         except:
